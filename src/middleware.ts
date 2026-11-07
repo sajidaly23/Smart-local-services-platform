@@ -1,6 +1,6 @@
 import createMiddleware from "next-intl/middleware";
 import { NextRequest, NextResponse } from "next/server";
-import { routing } from "./src/i18n/routing";
+import { routing } from "./i18n/routing";
 
 const intlMiddleware = createMiddleware(routing);
 
@@ -12,7 +12,7 @@ function decodeJwtPayload(token: string): { id: string; role: string; email: str
     const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
     const jsonPayload = Buffer.from(base64, "base64").toString("utf-8");
     return JSON.parse(jsonPayload);
-  } catch (e) {
+  } catch {
     return null;
   }
 }
@@ -20,10 +20,12 @@ function decodeJwtPayload(token: string): { id: string; role: string; email: str
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Skip API routes, static files, images, favicon
+  // Skip API routes, internal Next.js routes, static files, images, favicon
   if (
     pathname.startsWith("/api") ||
     pathname.startsWith("/_next") ||
+    pathname.startsWith("/_not-found") ||
+    pathname.startsWith("/_error") ||
     pathname.includes(".") ||
     pathname.startsWith("/images") ||
     pathname.startsWith("/logo") ||
@@ -95,6 +97,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next|_vercel|.*\\..*).*)"],
+  matcher: ["/((?!api|_next|_vercel|_not-found|_error|.*\\..*).*)"],
 };
-

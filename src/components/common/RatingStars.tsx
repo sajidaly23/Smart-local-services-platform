@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { Star } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -38,15 +40,30 @@ export const RatingStars: React.FC<RatingStarsProps> = ({
           const isFilled = rating >= starIndex;
           const isPartial = !isFilled && rating > starIndex - 1;
 
+          if (!interactive) {
+            return (
+              <span key={starIndex} className="p-0.5 inline-block">
+                <Star
+                  className={cn(
+                    iconSizes[size],
+                    isFilled
+                      ? "fill-amber-400 text-amber-400"
+                      : isPartial
+                      ? "fill-amber-200 text-amber-400"
+                      : "fill-slate-100 text-slate-300"
+                  )}
+                />
+              </span>
+            );
+          }
+
           return (
             <button
               key={starIndex}
               type="button"
-              disabled={!interactive}
-              onClick={() => interactive && onRate && onRate(starIndex)}
+              onClick={() => onRate && onRate(starIndex)}
               className={cn(
-                "p-0.5 transition-transform",
-                interactive && "hover:scale-125 cursor-pointer focus:outline-none"
+                "p-0.5 transition-transform hover:scale-125 cursor-pointer focus:outline-none"
               )}
             >
               <Star
@@ -76,4 +93,3 @@ export const RatingStars: React.FC<RatingStarsProps> = ({
     </div>
   );
 };
-
