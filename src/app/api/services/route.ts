@@ -22,16 +22,27 @@ export async function GET(req: NextRequest) {
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "12", 10);
     const providerId = searchParams.get("providerId");
+    const includeAll = searchParams.get("includeAll") === "true";
 
     // Geospatial search params
     const lat = searchParams.get("lat") ? parseFloat(searchParams.get("lat")!) : null;
     const lng = searchParams.get("lng") ? parseFloat(searchParams.get("lng")!) : null;
     const radiusKm = searchParams.get("radius") ? parseFloat(searchParams.get("radius")!) : 25; // default 25km
 
-    const filter: any = { isActive: true };
+    // Public queries only see approved + active services
+    // Provider's own listings (via providerId) see all their own services regardless of status
+    const filter: any = {};
 
     if (providerId) {
+      // Provider viewing their own services — show all statuses
       filter.provider = providerId;
+      if (!includeAll) {
+        filter.isActive = true;
+      }
+    } else {
+      // Public marketplace — only approved and active services
+      filter.isActive = true;
+      filter.status = "approved";
     }
 
     if (query) {
@@ -178,17 +189,10 @@ export async function POST(req: NextRequest) {
       isActive,
     } = validated.data;
 
-    // Check provider verification status
-    let isPublicActive = isActive;
-    if (user!.role === "provider") {
-      const providerProfile = await ProviderProfile.findOne({ user: user!.id });
-      // If provider is not verified yet, default service to private or draft
-      if (providerProfile?.verificationStatus !== "verified") {
-        isPublicActive = false; // Only verified providers can publish publicly
-      }
-    }
-
     const slug = `${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now().toString(36)}`;
+
+    // Admin-created services are auto-approved; provider services start as pending
+    const isAdmin = user!.role === "admin";
 
     const newService = await Service.create({
       provider: user!.id,
@@ -206,15 +210,18 @@ export async function POST(req: NextRequest) {
         type: "Point",
         coordinates: location?.coordinates || [74.3142, 35.9208],
       },
-      isActive: isPublicActive,
+      isActive: isActive !== undefined ? isActive : true,
+      status: isAdmin ? "approved" : "pending",
+      approvedAt: isAdmin ? new Date() : null,
+      reviewedBy: isAdmin ? user!.id : null,
     });
 
     return NextResponse.json(
       {
         success: true,
-        message: isPublicActive
+        message: isAdmin
           ? "Service published successfully"
-          : "Service saved as private draft pending provider verification approval",
+          : "Service submitted successfully! It is currently under review by Admin and will be published once approved.",
         service: newService,
       },
       { status: 201 }
@@ -224,4 +231,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
-

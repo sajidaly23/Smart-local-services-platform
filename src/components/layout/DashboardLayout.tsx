@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   Users,
   Layers,
+  PackageCheck,
   BarChart3,
   LogOut,
   Menu,
@@ -64,6 +65,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     if (user.role === "admin") {
       return [
         { label: "Overview", href: "/dashboard/admin", icon: LayoutDashboard },
+        { label: "Service Moderation", href: "/dashboard/admin/services", icon: PackageCheck },
         { label: "Verifications", href: "/dashboard/admin/verifications", icon: ShieldCheck },
         { label: "Users & Customers", href: "/dashboard/admin/users", icon: Users },
         { label: "Service Providers", href: "/dashboard/admin/providers", icon: Wrench },

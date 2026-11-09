@@ -17,6 +17,10 @@ export interface IService extends Document {
     coordinates: [number, number]; // [longitude, latitude]
   };
   isActive: boolean;
+  status: "pending" | "approved" | "rejected" | "suspended";
+  rejectionReason: string | null;
+  approvedAt: Date | null;
+  reviewedBy: mongoose.Types.ObjectId | null;
   viewsCount: number;
   bookingsCount: number;
   createdAt: Date;
@@ -48,6 +52,14 @@ const ServiceSchema = new Schema<IService>(
       },
     },
     isActive: { type: Boolean, default: true },
+    status: {
+      type: String,
+      enum: ["pending", "approved", "rejected", "suspended"],
+      default: "pending",
+    },
+    rejectionReason: { type: String, default: null },
+    approvedAt: { type: Date, default: null },
+    reviewedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
     viewsCount: { type: Number, default: 0 },
     bookingsCount: { type: Number, default: 0 },
   },
@@ -58,11 +70,11 @@ ServiceSchema.index({ provider: 1 });
 ServiceSchema.index({ category: 1 });
 ServiceSchema.index({ "location": "2dsphere" });
 ServiceSchema.index({ city: 1, area: 1 });
-ServiceSchema.index({ isActive: 1 });
+ServiceSchema.index({ isActive: 1, status: 1 });
+ServiceSchema.index({ status: 1 });
 ServiceSchema.index({ title: "text", description: "text" });
 
 const Service: Model<IService> =
   mongoose.models.Service || mongoose.model<IService>("Service", ServiceSchema);
 
 export default Service;
-

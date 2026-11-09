@@ -38,7 +38,7 @@ export default async function HomePage() {
   // Fetch real data from MongoDB
   const [categories, featuredServices, featuredProviders] = await Promise.all([
     Category.find({ isActive: true }).limit(8).lean(),
-    Service.find({ isActive: true })
+    Service.find({ isActive: true, status: "approved" })
       .populate("category", "name slug icon")
       .populate("provider", "name profileImage")
       .sort({ createdAt: -1 })

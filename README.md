@@ -94,7 +94,12 @@ The platform comes pre-seeded with realistic demonstration data for Gilgit-Balti
 ├── src/
 │   ├── app/
 │   │   ├── [locale]/
-│   │   │   ├── (auth)/               # Login, Register, Forgot/Reset Password
+│   │   │   ├── login/                # Role selection & 1-click Demo credentials
+│   │   │   ├── register/             # Customer & Provider registration with Zod validation
+│   │   │   ├── forgot-password/      # Self-service password recovery
+│   │   │   ├── reset-password/       # Secure token-based credential reset
+│   │   │   ├── services/             # Dynamic catalog & detail views
+│   │   │   ├── providers/            # Public provider profiles & credentials
 │   │   │   ├── dashboard/
 │   │   │   │   ├── admin/            # Command center, Verifications, Users, Categories, Disputes
 │   │   │   │   ├── customer/         # Bookings, Live Chat, Notifications, Reviews, Complaints
