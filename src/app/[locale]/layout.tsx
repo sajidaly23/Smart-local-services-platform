@@ -22,13 +22,8 @@ export default async function LocaleLayout({
   const isUrdu = locale === "ur";
 
   return (
-    <html lang={locale} dir={isUrdu ? "rtl" : "ltr"}>
-      <body className="min-h-screen bg-slate-50 font-sans antialiased text-slate-900 selection:bg-brand-500 selection:text-white">
-        <NextIntlClientProvider messages={messages} locale={locale}>
-          <ToastProvider>{children}</ToastProvider>
-        </NextIntlClientProvider>
-      </body>
-    </html>
+    <NextIntlClientProvider messages={messages} locale={locale}>
+      <ToastProvider>{children}</ToastProvider>
+    </NextIntlClientProvider>
   );
 }
-

@@ -54,9 +54,11 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const handleLogout = async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
-      router.push("/login");
+      // Use hard redirect to force full page reload and clear cookie state
+      window.location.href = "/login";
     } catch (e) {
       console.error(e);
+      window.location.href = "/login";
     }
   };
 

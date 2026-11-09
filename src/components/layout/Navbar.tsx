@@ -68,9 +68,11 @@ export const Navbar: React.FC<NavbarProps> = ({ currentUser: initialUser }) => {
       await fetch("/api/auth/logout", { method: "POST" });
       setCurrentUser(null);
       setUserDropdownOpen(false);
-      router.push("/login");
+      // Use hard redirect to force full page reload and clear cookie state
+      window.location.href = "/login";
     } catch (e) {
       console.error(e);
+      window.location.href = "/login";
     }
   };
 
