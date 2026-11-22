@@ -1,0 +1,13 @@
+# Ignore socket server - deployed separately on Render.com
+socket-server/node_modules
+socket-server/package-lock.json
+
+# Ignore local dev files
+.env.local
+scripts/
+*.mjs
+
+# Ignore test and seed files
+__tests__/
+*.test.ts
+*.spec.ts
