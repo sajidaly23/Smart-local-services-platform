@@ -22,8 +22,16 @@ export default async function LocaleLayout({
   const isUrdu = locale === "ur";
 
   return (
-    <NextIntlClientProvider messages={messages} locale={locale}>
-      <ToastProvider>{children}</ToastProvider>
-    </NextIntlClientProvider>
+    <>
+      {/* Set lang and dir on the html element via script to avoid hydration mismatch */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `document.documentElement.lang="${locale}";document.documentElement.dir="${isUrdu ? "rtl" : "ltr"}";`,
+        }}
+      />
+      <NextIntlClientProvider messages={messages} locale={locale}>
+        <ToastProvider>{children}</ToastProvider>
+      </NextIntlClientProvider>
+    </>
   );
 }
