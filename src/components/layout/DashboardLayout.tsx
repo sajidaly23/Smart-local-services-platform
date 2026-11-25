@@ -84,6 +84,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         { label: "My Services", href: "/dashboard/provider/services", icon: Wrench },
         { label: "Booking Requests", href: "/dashboard/provider/bookings", icon: Calendar },
         { label: "Live Messages", href: "/dashboard/provider/messages", icon: MessageSquare },
+        { label: "Notifications", href: "/dashboard/provider/notifications", icon: Bell },
         { label: "Verification Documents", href: "/dashboard/provider/verification", icon: ShieldCheck },
         { label: "Customer Reviews", href: "/dashboard/provider/reviews", icon: Star },
         { label: "Profile & Areas", href: "/dashboard/provider/profile", icon: User },

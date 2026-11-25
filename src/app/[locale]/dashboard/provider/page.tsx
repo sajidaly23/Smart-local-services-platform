@@ -28,22 +28,22 @@ export default function ProviderDashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([
-      fetch("/api/auth/me").then((r) => r.json()),
-      fetch("/api/services").then((r) => r.json()),
-      fetch("/api/bookings").then((r) => r.json()),
-    ])
-      .then(([userData, svcData, bookingData]) => {
-        if (userData.success) setUser(userData.user);
-        if (svcData.success && userData.user) {
-          const myServices = svcData.services.filter(
-            (s: any) => s.provider?._id === userData.user.id
-          );
-          setServices(myServices);
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((userData) => {
+        if (userData.success) {
+          setUser(userData.user);
+          // Fetch provider's OWN services (all statuses) and their bookings
+          return Promise.all([
+            fetch(`/api/services?providerId=${userData.user.id}&includeAll=true&limit=100`).then((r) => r.json()),
+            fetch("/api/bookings").then((r) => r.json()),
+          ]);
         }
-        if (bookingData.success) {
-          setBookings(bookingData.bookings);
-        }
+        return [null, null];
+      })
+      .then(([svcData, bookingData]: any) => {
+        if (svcData?.success) setServices(svcData.services);
+        if (bookingData?.success) setBookings(bookingData.bookings);
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
