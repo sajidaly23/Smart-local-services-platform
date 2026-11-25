@@ -196,27 +196,31 @@ export default function AdminDashboardOverviewPage() {
                 Lifecycle progression of customer appointments
               </p>
               <div className="h-64 w-full flex items-center justify-center">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={analytics.bookingStatuses}
-                      dataKey="count"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      label={({ name, percent }: any) =>
-                        `${name}: ${((percent || 0) * 100).toFixed(0)}%`
-                      }
-                      fontSize={11}
-                    >
-                      {analytics.bookingStatuses.map((entry: any, index: number) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
+                {Array.isArray(analytics?.bookingStatuses) && analytics.bookingStatuses.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={analytics.bookingStatuses}
+                        dataKey="count"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={80}
+                        label={({ name, percent }: any) =>
+                          `${name}: ${((percent || 0) * 100).toFixed(0)}%`
+                        }
+                        fontSize={11}
+                      >
+                        {analytics.bookingStatuses.map((entry: any, index: number) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <p className="text-xs text-slate-400">No booking data available yet.</p>
+                )}
               </div>
             </div>
           </div>
@@ -285,7 +289,7 @@ export default function AdminDashboardOverviewPage() {
                   <div key={c._id} className="p-4 flex items-center justify-between text-xs">
                     <div className="min-w-0 flex-1 pr-2">
                       <p className="font-bold text-slate-900 truncate">
-                        {c.submittedBy?.name} • <span className="capitalize">{c.category.replace(/_/g, " ")}</span>
+                        {c.submittedBy?.name} • <span className="capitalize">{(c.category || "").replace(/_/g, " ")}</span>
                       </p>
                       <p className="text-[11px] text-slate-500 truncate">{c.description}</p>
                     </div>
