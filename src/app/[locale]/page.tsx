@@ -33,24 +33,32 @@ export default async function HomePage() {
   const t = await getTranslations("hero");
   const tHome = await getTranslations("home");
 
-  await connectToDatabase();
+  let categories: any[] = [];
+  let featuredServices: any[] = [];
+  let featuredProviders: any[] = [];
 
-  // Fetch real data from MongoDB
-  const [categories, featuredServices, featuredProviders] = await Promise.all([
-    Category.find({ isActive: true }).limit(8).lean(),
-    Service.find({ isActive: true, status: "approved" })
-      .populate("category", "name slug icon")
-      .populate("provider", "name profileImage")
-      .sort({ createdAt: -1 })
-      .limit(6)
-      .lean(),
-    ProviderProfile.find({ verificationStatus: "verified" })
-      .populate("user", "name profileImage")
-      .populate("serviceCategories", "name")
-      .sort({ averageRating: -1 })
-      .limit(3)
-      .lean(),
-  ]);
+  try {
+    await connectToDatabase();
+
+    // Fetch real data from MongoDB
+    [categories, featuredServices, featuredProviders] = await Promise.all([
+      Category.find({ isActive: true }).limit(8).lean(),
+      Service.find({ isActive: true, status: "approved" })
+        .populate("category", "name slug icon")
+        .populate("provider", "name profileImage")
+        .sort({ createdAt: -1 })
+        .limit(6)
+        .lean(),
+      ProviderProfile.find({ verificationStatus: "verified" })
+        .populate("user", "name profileImage")
+        .populate("serviceCategories", "name")
+        .sort({ averageRating: -1 })
+        .limit(3)
+        .lean(),
+    ]);
+  } catch (err) {
+    console.error("[HomePage] Failed to load data from MongoDB:", err);
+  }
 
   // Map markers for Leaflet map
   const mapMarkers = featuredServices

@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/localconnect";
+const rawUri = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/localconnect";
+// Sanitize spaces in database name if present (e.g., "smart local community" -> "smart_local_community")
+const MONGODB_URI = rawUri.replace(/\/([^/?]+)(\?|$)/, (_, dbName, rest) => `/${dbName.trim().replace(/\s+/g, "_")}${rest}`);
 
 interface MongooseCache {
   conn: typeof mongoose | null;
@@ -27,6 +29,8 @@ export async function connectToDatabase(): Promise<typeof mongoose> {
     const opts: mongoose.ConnectOptions = {
       bufferCommands: false,
       maxPoolSize: 10,
+      serverSelectionTimeoutMS: 8000,
+      connectTimeoutMS: 8000,
     };
 
     cached.promise = mongoose
