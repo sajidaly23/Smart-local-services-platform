@@ -28,25 +28,26 @@ export default function ProviderDashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/auth/me")
-      .then((r) => r.json())
-      .then((userData) => {
+    const loadDashboard = async () => {
+      try {
+        const userRes = await fetch("/api/auth/me");
+        const userData = await userRes.json();
         if (userData.success) {
           setUser(userData.user);
-          // Fetch provider's OWN services (all statuses) and their bookings
-          return Promise.all([
+          const [svcData, bookingData] = await Promise.all([
             fetch(`/api/services?providerId=${userData.user.id}&includeAll=true&limit=100`).then((r) => r.json()),
             fetch("/api/bookings").then((r) => r.json()),
           ]);
+          if (svcData?.success) setServices(svcData.services);
+          if (bookingData?.success) setBookings(bookingData.bookings);
         }
-        return [null, null];
-      })
-      .then(([svcData, bookingData]: any) => {
-        if (svcData?.success) setServices(svcData.services);
-        if (bookingData?.success) setBookings(bookingData.bookings);
-      })
-      .catch((err) => console.error(err))
-      .finally(() => setLoading(false));
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadDashboard();
   }, []);
 
   if (loading) {

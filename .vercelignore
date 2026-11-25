@@ -5,7 +5,6 @@ socket-server/package-lock.json
 # Ignore local dev files
 .env.local
 scripts/
-*.mjs
 
 # Ignore test and seed files
 __tests__/
