@@ -6,8 +6,8 @@ dotenv.config({ path: ".env.local" });
 dotenv.config();
 
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/localconnect";
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@localconnect.pk";
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Admin@12345";
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "raeessajidali10@gmail.com";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "raees@111";
 
 // Schemas
 const UserSchema = new mongoose.Schema(

@@ -89,7 +89,7 @@ export default function LoginPage() {
           <div className="grid grid-cols-3 gap-2">
             <button
               type="button"
-              onClick={() => handleQuickDemoFill("admin@localconnect.pk", "Admin@12345")}
+              onClick={() => handleQuickDemoFill("raeessajidali10@gmail.com", "raees@111")}
               className="flex flex-col items-center justify-center rounded-lg border border-brand-200 bg-white p-2 text-center shadow-2xs hover:bg-brand-100/50 transition-colors"
             >
               <ShieldCheck className="h-4 w-4 text-brand-600 mb-0.5" />
