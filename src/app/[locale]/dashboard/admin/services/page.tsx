@@ -22,6 +22,9 @@ import {
   Mail,
   Phone,
   Image as ImageIcon,
+  Pencil,
+  Trash2,
+  Save,
 } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 
@@ -60,6 +63,21 @@ export default function AdminServicesPage() {
   });
   const [rejectReason, setRejectReason] = useState("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [editService, setEditService] = useState<any>(null);
+  const [editForm, setEditForm] = useState({
+    title: "",
+    category: "",
+    price: "",
+    priceType: "fixed",
+    city: "",
+    area: "",
+    serviceAreas: "",
+    description: "",
+    status: "approved",
+    isActive: true,
+  });
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
 
   const fetchServices = useCallback(() => {
     setLoading(true);
@@ -84,6 +102,87 @@ export default function AdminServicesPage() {
   useEffect(() => {
     fetchServices();
   }, [fetchServices]);
+
+  useEffect(() => {
+    fetch("/api/categories")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success) setCategories(d.categories);
+      })
+      .catch(() => {});
+  }, []);
+
+  const openEditModal = (s: any) => {
+    setEditService(s);
+    setEditForm({
+      title: s.title || "",
+      category: s.category?._id || s.category || "",
+      price: s.price?.toString() || "",
+      priceType: s.priceType || "fixed",
+      city: s.city || "Gilgit",
+      area: s.area || "",
+      serviceAreas: (s.serviceAreas || []).join(", "),
+      description: s.description || "",
+      status: s.status || "approved",
+      isActive: s.isActive ?? true,
+    });
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editService) return;
+    setIsSavingEdit(true);
+    try {
+      const payload = {
+        title: editForm.title.trim(),
+        category: editForm.category,
+        price: Number(editForm.price),
+        priceType: editForm.priceType,
+        city: editForm.city.trim(),
+        area: editForm.area.trim(),
+        serviceAreas: editForm.serviceAreas.split(",").map((a) => a.trim()).filter(Boolean),
+        description: editForm.description.trim(),
+        status: editForm.status,
+        isActive: editForm.isActive,
+      };
+      const res = await fetch(`/api/services/${editService._id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Service updated successfully!");
+        setEditService(null);
+        fetchServices();
+      } else {
+        toast.error(data.error || "Failed to update service");
+      }
+    } catch {
+      toast.error("Network error");
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
+  const handleDeleteService = async (serviceId: string, title: string) => {
+    if (!confirm(`Are you sure you want to permanently delete "${title}"?`)) return;
+    setActionLoading(serviceId);
+    try {
+      const res = await fetch(`/api/services/${serviceId}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Service deleted successfully");
+        fetchServices();
+      } else {
+        toast.error(data.error || "Failed to delete service");
+      }
+    } catch {
+      toast.error("Network error");
+    } finally {
+      setActionLoading(null);
+    }
+  };
 
   const handleApprove = async (serviceId: string) => {
     setActionLoading(serviceId);
@@ -322,6 +421,15 @@ export default function AdminServicesPage() {
                               <Eye className="h-4 w-4" />
                             </button>
 
+                            {/* Edit */}
+                            <button
+                              onClick={() => openEditModal(s)}
+                              title="Edit Service"
+                              className="rounded-lg p-1.5 text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </button>
+
                             {/* Approve — show if not already approved */}
                             {s.status !== "approved" && (
                               <button
@@ -359,6 +467,16 @@ export default function AdminServicesPage() {
                                 <AlertTriangle className="h-4 w-4" />
                               </button>
                             )}
+
+                            {/* Delete */}
+                            <button
+                              onClick={() => handleDeleteService(s._id, s.title)}
+                              disabled={isProcessing}
+                              title="Delete Service"
+                              className="rounded-lg p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 disabled:opacity-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -606,6 +724,153 @@ export default function AdminServicesPage() {
                 Reject Service
               </Button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* ========== EDIT SERVICE MODAL ========== */}
+      {editService && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setEditService(null)}>
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+              <div>
+                <h3 className="text-base font-bold text-slate-900">Edit Service</h3>
+                <p className="text-xs text-slate-500">Provider: {editService.provider?.name}</p>
+              </div>
+              <button onClick={() => setEditService(null)} className="rounded-lg p-1.5 hover:bg-slate-100">
+                <X className="h-5 w-5 text-slate-500" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEdit} className="p-6 space-y-4 text-xs">
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">Service Title</label>
+                <input
+                  type="text"
+                  required
+                  value={editForm.title}
+                  onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-brand-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Category</label>
+                  <select
+                    value={editForm.category}
+                    onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-brand-500 focus:outline-none"
+                  >
+                    {categories.map((c) => (
+                      <option key={c._id} value={c._id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Price (PKR)</label>
+                  <input
+                    type="number"
+                    required
+                    min={0}
+                    value={editForm.price}
+                    onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-brand-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Price Type</label>
+                  <select
+                    value={editForm.priceType}
+                    onChange={(e) => setEditForm({ ...editForm, priceType: e.target.value })}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-brand-500 focus:outline-none"
+                  >
+                    <option value="fixed">Fixed Price</option>
+                    <option value="hourly">Hourly Rate</option>
+                    <option value="quote">Custom Quote</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">City</label>
+                  <input
+                    type="text"
+                    value={editForm.city}
+                    onChange={(e) => setEditForm({ ...editForm, city: e.target.value })}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-brand-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Area</label>
+                  <input
+                    type="text"
+                    value={editForm.area}
+                    onChange={(e) => setEditForm({ ...editForm, area: e.target.value })}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-brand-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">Service Coverage Areas (comma-separated)</label>
+                <input
+                  type="text"
+                  value={editForm.serviceAreas}
+                  onChange={(e) => setEditForm({ ...editForm, serviceAreas: e.target.value })}
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-brand-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">Description</label>
+                <textarea
+                  rows={3}
+                  required
+                  value={editForm.description}
+                  onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-brand-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center pt-1">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Moderation Status</label>
+                  <select
+                    value={editForm.status}
+                    onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-brand-500 focus:outline-none"
+                  >
+                    <option value="approved">Approved</option>
+                    <option value="pending">Pending Review</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="suspended">Suspended</option>
+                  </select>
+                </div>
+                <label className="flex items-center gap-2 pt-5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={editForm.isActive}
+                    onChange={(e) => setEditForm({ ...editForm, isActive: e.target.checked })}
+                    className="h-4 w-4 rounded border-slate-300 text-brand-600"
+                  />
+                  <span className="font-semibold text-slate-700">Service is Active (Visible if Approved)</span>
+                </label>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 border-t border-slate-100 pt-4">
+                <Button type="button" variant="secondary" size="sm" onClick={() => setEditService(null)}>
+                  Cancel
+                </Button>
+                <Button type="submit" variant="primary" size="sm" isLoading={isSavingEdit}>
+                  <Save className="h-4 w-4 mr-1.5" />
+                  Save Changes
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
       )}

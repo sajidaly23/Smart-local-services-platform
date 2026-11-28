@@ -13,6 +13,7 @@ import { useToast } from "@/components/ui/toast";
 export default function ProviderProfilePage() {
   const toast = useToast();
   const [user, setUser] = useState<any>(null);
+  const [verificationStatus, setVerificationStatus] = useState<"pending" | "verified" | "rejected">("pending");
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -34,7 +35,8 @@ export default function ProviderProfilePage() {
       .then((data) => {
         if (data.success && data.profile) {
           const p = data.profile;
-          setUser(p.user);
+          setUser({ ...(p.user || {}), role: p.user?.role || "provider" });
+          setVerificationStatus(p.verificationStatus || "pending");
           setName(p.user?.name || "");
           setPhone(p.user?.phone || "");
           setProfessionalTitle(p.professionalTitle || "");
@@ -84,6 +86,12 @@ export default function ProviderProfilePage() {
         return;
       }
 
+      if (data.profile?.user) {
+        setUser({ ...data.profile.user, role: data.profile.user.role || "provider" });
+      } else {
+        setUser((prev: any) => ({ ...prev, name, phone, role: "provider" }));
+      }
+
       toast.success("Professional profile updated successfully!");
     } catch (err) {
       setIsSaving(false);
@@ -117,7 +125,7 @@ export default function ProviderProfilePage() {
                 <h3 className="text-base font-bold text-slate-900">{name}</h3>
                 <p className="text-xs text-slate-500">{user?.email}</p>
                 <div className="mt-1">
-                  <VerifiedBadge status={user?.verificationStatus || "pending"} />
+                  <VerifiedBadge status={verificationStatus} />
                 </div>
               </div>
             </div>

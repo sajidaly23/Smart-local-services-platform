@@ -11,12 +11,27 @@ export async function GET(req: NextRequest) {
     if (!authorized) return errorResponse;
 
     await connectToDatabase();
-    const profile = await ProviderProfile.findOne({ user: user!.id })
-      .populate("user", "name email phone profileImage")
+    let profile = await ProviderProfile.findOne({ user: user!.id })
+      .populate("user", "name email phone profileImage role")
       .populate("serviceCategories", "name slug icon");
 
     if (!profile) {
-      return NextResponse.json({ success: false, error: "Profile not found" }, { status: 404 });
+      // Auto-create default profile for newly registered providers
+      profile = await ProviderProfile.create({
+        user: user!.id,
+        professionalTitle: "Local Service Specialist",
+        bio: "",
+        skills: [],
+        experienceYears: 1,
+        serviceAreas: ["Gilgit City"],
+        city: "Gilgit",
+        area: "Gilgit City",
+        verificationStatus: "pending",
+        isAvailable: true,
+      });
+      profile = await ProviderProfile.findById(profile._id)
+        .populate("user", "name email phone profileImage role")
+        .populate("serviceCategories", "name slug icon");
     }
 
     return NextResponse.json({ success: true, profile });
@@ -35,12 +50,14 @@ export async function PATCH(req: NextRequest) {
     await connectToDatabase();
 
     // If updating name, phone or profileImage, update User document
-    if (body.name || body.phone || body.profileImage) {
+    if (body.name !== undefined || body.phone !== undefined || body.profileImage !== undefined) {
       const userUpdates: any = {};
-      if (body.name) userUpdates.name = body.name;
-      if (body.phone) userUpdates.phone = body.phone;
+      if (body.name) userUpdates.name = String(body.name).trim();
+      if (body.phone !== undefined) userUpdates.phone = String(body.phone).trim();
       if (body.profileImage) userUpdates.profileImage = body.profileImage;
-      await User.findByIdAndUpdate(user!.id, { $set: userUpdates });
+      if (Object.keys(userUpdates).length > 0) {
+        await User.findByIdAndUpdate(user!.id, { $set: userUpdates });
+      }
     }
 
     // Filter profile updates
@@ -68,7 +85,9 @@ export async function PATCH(req: NextRequest) {
       { user: user!.id },
       { $set: updates },
       { new: true, upsert: true }
-    );
+    )
+      .populate("user", "name email phone profileImage role")
+      .populate("serviceCategories", "name slug icon");
 
     return NextResponse.json({
       success: true,

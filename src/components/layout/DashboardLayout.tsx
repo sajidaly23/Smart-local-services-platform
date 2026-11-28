@@ -23,6 +23,7 @@ import {
   X,
   ChevronRight,
   ExternalLink,
+  Search,
 } from "lucide-react";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { VerifiedBadge } from "@/components/common/VerifiedBadge";
@@ -94,6 +95,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     // Customer links
     return [
       { label: "Dashboard", href: "/dashboard/customer", icon: LayoutDashboard },
+      { label: "Explore Services", href: "/services", icon: Search },
       { label: "My Bookings", href: "/dashboard/customer/bookings", icon: Calendar },
       { label: "Live Messages", href: "/dashboard/customer/messages", icon: MessageSquare },
       { label: "Notifications", href: "/dashboard/customer/notifications", icon: Bell },
