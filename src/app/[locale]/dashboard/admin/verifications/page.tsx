@@ -95,11 +95,15 @@ export default function AdminVerificationsPage() {
         {/* Filter Pills */}
         <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
           {[
-            { id: "all", label: "All Requests" },
-            { id: "pending", label: "Pending Review" },
-            { id: "approved", label: "Approved" },
-            { id: "rejected", label: "Rejected" },
-          ].map((tab) => (
+            { id: "all", label: `All Requests` },
+            { id: "pending", label: `Pending Review` },
+            { id: "approved", label: `Approved` },
+            { id: "rejected", label: `Rejected` },
+          ].map((tab) => {
+            const count = tab.id === "all"
+              ? verifications.length
+              : verifications.filter((v) => v.status === tab.id).length;
+            return (
             <button
               key={tab.id}
               onClick={() => setFilter(tab.id)}
@@ -109,9 +113,10 @@ export default function AdminVerificationsPage() {
                   : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
               }`}
             >
-              {tab.label}
+              {tab.label} ({count})
             </button>
-          ))}
+            );
+          })}
         </div>
 
         {loading ? (
@@ -191,22 +196,34 @@ export default function AdminVerificationsPage() {
             <h4 className="font-bold text-slate-800 uppercase tracking-wider mb-2">
               Submitted Document Image ({selectedReq?.documentType?.toUpperCase()})
             </h4>
-            <div className="rounded-xl border border-slate-200 bg-slate-100 overflow-hidden max-h-72 flex items-center justify-center p-2">
-              <img
-                src={selectedReq?.documentUrls?.[0] || "https://res.cloudinary.com/demo/image/upload/sample.jpg"}
-                alt="Verification Document"
-                className="max-h-64 object-contain rounded-lg shadow-sm"
-              />
+            <div className="rounded-xl border border-slate-200 bg-slate-100 overflow-hidden max-h-72 flex items-center justify-center p-4">
+              {selectedReq?.documentUrls?.[0] ? (
+                <img
+                  src={selectedReq.documentUrls[0]}
+                  alt="Verification Document"
+                  className="max-h-64 object-contain rounded-lg shadow-sm"
+                />
+              ) : (
+                <div className="text-center py-8 text-slate-500">
+                  <FileText className="h-8 w-8 mx-auto mb-2 text-slate-400" />
+                  <p className="font-semibold text-slate-700">No document uploaded yet</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    Newly registered provider — you can still approve or reject their account.
+                  </p>
+                </div>
+              )}
             </div>
-            <a
-              href={selectedReq?.documentUrls?.[0] || "#"}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1 text-xs text-brand-600 font-semibold mt-2 hover:underline"
-            >
-              <span>Open Full Resolution Document</span>
-              <ExternalLink className="h-3 w-3" />
-            </a>
+            {selectedReq?.documentUrls?.[0] && (
+              <a
+                href={selectedReq.documentUrls[0]}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 text-xs text-brand-600 font-semibold mt-2 hover:underline"
+              >
+                <span>Open Full Resolution Document</span>
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            )}
           </div>
 
           <Textarea

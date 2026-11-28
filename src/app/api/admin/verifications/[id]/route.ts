@@ -52,11 +52,11 @@ export async function PATCH(
       }
     );
 
-    // If approved, automatically activate the provider's draft services so they appear publicly
+    // If approved, automatically activate & approve the provider's draft/pending services so they appear publicly
     if (isApproved) {
       await Service.updateMany(
-        { provider: providerId },
-        { $set: { isActive: true } }
+        { provider: providerId, status: { $in: ["pending", "approved"] } },
+        { $set: { isActive: true, status: "approved", approvedAt: new Date(), reviewedBy: user!.id as any } }
       );
     }
 

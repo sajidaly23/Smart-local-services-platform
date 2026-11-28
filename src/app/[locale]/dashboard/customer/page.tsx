@@ -36,7 +36,7 @@ export default function CustomerDashboardPage() {
       fetch("/api/auth/me").then((r) => r.json()),
       fetch("/api/bookings").then((r) => r.json()),
       fetch("/api/services?limit=50").then((r) => r.json()),
-      fetch("/api/providers?verification=verified").then((r) => r.json()),
+      fetch("/api/providers").then((r) => r.json()),
     ])
       .then(([userData, bookingData, svcData, provData]) => {
         if (userData.success) setUser(userData.user);

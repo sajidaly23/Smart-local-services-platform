@@ -16,13 +16,40 @@ export async function GET(req: NextRequest) {
     const filter: any = {};
     if (user!.role === "provider") {
       filter.provider = user!.id;
+    } else if (user!.role === "admin") {
+      // Ensure any pending ProviderProfile without a pending VerificationRequest is queued
+      const pendingProfiles = await ProviderProfile.find({ verificationStatus: "pending" })
+        .select("user")
+        .lean();
+      for (const prof of pendingProfiles) {
+        const userId = prof.user.toString();
+        // Check if any pending verification request already exists for this provider
+        const existingReq = await VerificationRequest.findOne({
+          provider: userId,
+          status: "pending",
+        }).select("_id").lean();
+        if (!existingReq) {
+          // Get user info for better admin notes
+          const providerUser = await User.findById(userId).select("name").lean() as any;
+          await VerificationRequest.create({
+            provider: userId,
+            documentType: "cnic",
+            documentUrls: [],
+            status: "pending",
+            adminNotes: `New provider "${providerUser?.name || "Unknown"}" awaiting admin approval`,
+          });
+        }
+      }
     }
 
     const requests = await VerificationRequest.find(filter)
       .populate("provider", "name email phone")
       .sort({ createdAt: -1 });
 
-    return NextResponse.json({ success: true, verifications: requests });
+    // Filter out any requests where provider populate failed (deleted users)
+    const validRequests = requests.filter((r) => r.provider != null);
+
+    return NextResponse.json({ success: true, verifications: validRequests });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }

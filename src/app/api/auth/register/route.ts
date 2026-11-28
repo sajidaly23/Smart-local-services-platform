@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/mongodb";
-import { User, ProviderProfile } from "@/models";
+import { User, ProviderProfile, VerificationRequest } from "@/models";
 import { RegisterSchema } from "@/lib/validations";
 import { hashPassword, signJwtToken, AUTH_COOKIE_NAME } from "@/lib/auth";
 
@@ -67,6 +67,15 @@ export async function POST(req: NextRequest) {
           coordinates: [74.3142, 35.9208],
         },
         verificationStatus: "pending",
+      });
+
+      // Automatically queue new provider for Admin verification review
+      await VerificationRequest.create({
+        provider: newUser._id,
+        documentType: "cnic",
+        documentUrls: [],
+        status: "pending",
+        adminNotes: "New provider registration awaiting admin approval",
       });
     }
 
